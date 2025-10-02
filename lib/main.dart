@@ -1,122 +1,643 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'models/youtube_short.dart';
+import 'widgets/quote/quote_section.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const GitaConnectApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class GitaConnectApp extends StatelessWidget {
+  const GitaConnectApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Gita Connect',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const GitaConnectHomePage(title: 'Gita Connect - ISKCON Youth'),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+class GitaConnectHomePage extends StatelessWidget {
+  const GitaConnectHomePage({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text(title),
+        automaticallyImplyLeading: false, // Remove default hamburger
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Notifications coming soon!')),
+              );
+            },
+          ),
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openEndDrawer();
+              },
+            ),
+          ),
+        ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      endDrawer: _buildProfileDrawer(context),
+      body: const HomeContent(),
+    );
+  }
+
+  Widget _buildProfileDrawer(BuildContext context) {
+    return Drawer(
+      child: Column(
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.deepOrange.shade400, Colors.deepOrange.shade600],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.person, size: 40, color: Colors.deepOrange),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Welcome, Devotee!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Your spiritual journey continues...',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.person, color: Colors.deepOrange),
+                  title: const Text('Profile'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Profile page coming soon!')),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.school, color: Colors.deepOrange),
+                  title: const Text('My Courses'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Courses page coming soon!')),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.bookmark, color: Colors.deepOrange),
+                  title: const Text('Bookmarks'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Bookmarks feature coming soon!')),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.history, color: Colors.deepOrange),
+                  title: const Text('Reading History'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('History feature coming soon!')),
+                    );
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.settings, color: Colors.deepOrange),
+                  title: const Text('Settings'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Settings page coming soon!')),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.help_outline, color: Colors.deepOrange),
+                  title: const Text('Help & Support'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Help page coming soon!')),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Gita Connect v1.0.0\nISKCON Youth App',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HomeContent extends StatefulWidget {
+  const HomeContent({super.key});
+
+  @override
+  State<HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Quote Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.deepOrange.shade400, Colors.deepOrange.shade600],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.format_quote,
+                  color: Colors.white,
+                  size: 28,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '"If one reads Bhagavad-gītā regularly and attentively, he can surpass all studies of Vedic literature"',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.95),
+                    fontSize: 18,
+                    fontStyle: FontStyle.italic,
+                    height: 1.4,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '— A. C. Bhaktivedanta Swami Prabhupada',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Bhakti Bites
+          Text(
+            'Bhakti Bites',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.deepOrange.shade800,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 140,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: ShortsData.getFeaturedShorts().length,
+              itemBuilder: (context, index) {
+                final short = ShortsData.getFeaturedShorts()[index];
+                return GestureDetector(
+                  onTap: () => _launchVideo(short.url),
+                  child: Container(
+                    width: 200,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Stack(
+                        children: [
+                          // Thumbnail
+                          Container(
+                            height: 140,
+                            decoration: BoxDecoration(
+                              color: Colors.deepOrange.shade100,
+                              image: DecorationImage(
+                                image: NetworkImage(short.thumbnailUrl),
+                                fit: BoxFit.cover,
+                                onError: (exception, stackTrace) {
+                                  // Fallback if thumbnail fails to load
+                                },
+                              ),
+                            ),
+                          ),
+                          // Play button overlay
+                          Container(
+                            height: 140,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.3),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.play_circle_filled,
+                                color: Colors.white,
+                                size: 50,
+                              ),
+                            ),
+                          ),
+                          // Title overlay
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withOpacity(0.8),
+                                  ],
+                                ),
+                              ),
+                              child: Text(
+                                short.title,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Quick Actions
+          Text(
+            'Quick Actions',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.deepOrange.shade800,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildQuickActionCard(
+                  context,
+                  'Read Today',
+                  Icons.book,
+                  Colors.blue,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildQuickActionCard(
+                  context,
+                  'Listen Audio',
+                  Icons.headphones,
+                  Colors.green,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildQuickActionCard(
+                  context,
+                  'Meditate',
+                  Icons.self_improvement,
+                  Colors.purple,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildQuickActionCard(
+                  context,
+                  'Community',
+                  Icons.group,
+                  Colors.orange,
+                ),
+              ),
+            ],
+          ),
+          
+
+          
+          const SizedBox(height: 24),
+          
+          // Lecture Videos Section
+          Text(
+            'Lecture Videos',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.deepOrange.shade800,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...List.generate(3, (index) {
+            final lectureUrls = [
+              'https://www.youtube.com/watch?v=T9ImysdFAZw',
+              'https://www.youtube.com/watch?v=FIQqKyFJ_xw',
+              'https://www.youtube.com/watch?v=jn9TrsgdKU4',
+            ];
+            final lectureTitles = [
+              'Bhagavad Gita Chapter 1 - Arjuna Vishada Yoga',
+              'Krishna Consciousness in Daily Life',
+              'Understanding the Soul - Bhagavad Gita Wisdom',
+            ];
+            final lectureDurations = ['45:30', '32:15', '28:45'];
+            
+            return GestureDetector(
+              onTap: () => _launchVideo(lectureUrls[index]),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.deepOrange.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.deepOrange.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 2,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.deepOrange.shade200,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.play_arrow,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            lectureTitles[index],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.access_time,
+                                size: 16,
+                                color: Colors.grey.shade600,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                lectureDurations[index],
+                                style: TextStyle(color: Colors.grey.shade600),
+                              ),
+                              const Spacer(),
+                              Icon(
+                                Icons.play_circle_outline,
+                                color: Colors.deepOrange.shade600,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+          
+          const SizedBox(height: 24),
+          
+          // Success indicator
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green.shade200),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 32),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Gita Connect Successfully Running! 🎉',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade800,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        'Your ISKCON spiritual learning app is ready!',
+                        style: TextStyle(color: Colors.green.shade600),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method to launch videos
+  Future<void> _launchVideo(String url) async {
+    try {
+      // First, try to launch with external application (YouTube app)
+      final Uri videoUri = Uri.parse(url);
+      
+      // Try different launch modes for better compatibility
+      if (await canLaunchUrl(videoUri)) {
+        await launchUrl(
+          videoUri,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        // Fallback: try with platform default (browser)
+        await launchUrl(
+          videoUri,
+          mode: LaunchMode.platformDefault,
+        );
+      }
+    } catch (e) {
+      // Final fallback: convert to regular YouTube URL and try browser
+      try {
+        String fallbackUrl = _convertToRegularYouTubeUrl(url);
+        final Uri fallbackUri = Uri.parse(fallbackUrl);
+        await launchUrl(
+          fallbackUri,
+          mode: LaunchMode.inAppBrowserView,
+        );
+      } catch (fallbackError) {
+        debugPrint('Could not launch video: $url');
+        debugPrint('Error: $e');
+        debugPrint('Fallback error: $fallbackError');
+        
+        // Show user-friendly message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Unable to open video. Please check if YouTube is installed.'),
+              action: SnackBarAction(
+                label: 'OK',
+                onPressed: () {},
+              ),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  // Convert shorts URL to regular YouTube URL for better compatibility
+  String _convertToRegularYouTubeUrl(String url) {
+    if (url.contains('/shorts/')) {
+      // Extract video ID from shorts URL
+      final RegExp regExp = RegExp(r'/shorts/([a-zA-Z0-9_-]{11})');
+      final match = regExp.firstMatch(url);
+      if (match != null) {
+        final videoId = match.group(1);
+        return 'https://www.youtube.com/watch?v=$videoId';
+      }
+    }
+    return url; // Return original URL if not a shorts URL
+  }
+
+  Widget _buildQuickActionCard(BuildContext context, String title, IconData icon, Color color) {
+    return GestureDetector(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$title feature coming soon!')),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
+          children: [
+            Icon(icon, size: 32, color: color),
+            const SizedBox(height: 8),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
+
