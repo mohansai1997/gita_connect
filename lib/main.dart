@@ -215,12 +215,6 @@ class _HomeContentState extends State<HomeContent> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.format_quote,
-                  color: Colors.white,
-                  size: 28,
-                ),
-                const SizedBox(height: 16),
                 Text(
                   '"If one reads Bhagavad-gītā regularly and attentively, he can surpass all studies of Vedic literature"',
                   style: TextStyle(
@@ -549,64 +543,109 @@ class _HomeContentState extends State<HomeContent> {
   // Helper method to launch videos
   Future<void> _launchVideo(String url) async {
     try {
-      // First, try to launch with external application (YouTube app)
-      final Uri videoUri = Uri.parse(url);
+      // For shorts URLs, always convert to regular YouTube URL first for consistent behavior
+      String finalUrl = _convertToRegularYouTubeUrl(url);
+      final Uri videoUri = Uri.parse(finalUrl);
       
-      // Try different launch modes for better compatibility
-      if (await canLaunchUrl(videoUri)) {
+      debugPrint('Launching video: $finalUrl');
+      
+      // Try to launch with external application (YouTube app) first
+      // This avoids the in-app browser navigation issues
+      bool launched = false;
+      
+      try {
         await launchUrl(
           videoUri,
           mode: LaunchMode.externalApplication,
         );
-      } else {
-        // Fallback: try with platform default (browser)
-        await launchUrl(
-          videoUri,
-          mode: LaunchMode.platformDefault,
-        );
+        launched = true;
+        debugPrint('Successfully launched with external application');
+      } catch (e) {
+        debugPrint('External app launch failed: $e');
       }
-    } catch (e) {
-      // Final fallback: convert to regular YouTube URL and try browser
-      try {
-        String fallbackUrl = _convertToRegularYouTubeUrl(url);
-        final Uri fallbackUri = Uri.parse(fallbackUrl);
-        await launchUrl(
-          fallbackUri,
-          mode: LaunchMode.inAppBrowserView,
-        );
-      } catch (fallbackError) {
-        debugPrint('Could not launch video: $url');
-        debugPrint('Error: $e');
-        debugPrint('Fallback error: $fallbackError');
-        
-        // Show user-friendly message
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Unable to open video. Please check if YouTube is installed.'),
-              action: SnackBarAction(
-                label: 'OK',
-                onPressed: () {},
-              ),
-            ),
+      
+      if (!launched) {
+        // Fallback: try with platform default
+        try {
+          await launchUrl(
+            videoUri,
+            mode: LaunchMode.platformDefault,
           );
+          launched = true;
+          debugPrint('Successfully launched with platform default');
+        } catch (e) {
+          debugPrint('Platform default launch failed: $e');
         }
+      }
+      
+      if (!launched) {
+        // Final fallback: try original URL if we converted it
+        if (finalUrl != url) {
+          try {
+            final Uri originalUri = Uri.parse(url);
+            await launchUrl(
+              originalUri,
+              mode: LaunchMode.externalApplication,
+            );
+            launched = true;
+            debugPrint('Successfully launched with original URL');
+          } catch (e) {
+            debugPrint('Original URL launch failed: $e');
+          }
+        }
+      }
+      
+      if (!launched) {
+        throw Exception('All launch methods failed');
+      }
+      
+    } catch (e) {
+      debugPrint('Could not launch video: $url');
+      debugPrint('Error: $e');
+      
+      // Show user-friendly message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to open video. Please check if YouTube is installed.'),
+            action: SnackBarAction(
+              label: 'OK',
+              onPressed: () {},
+            ),
+          ),
+        );
       }
     }
   }
 
   // Convert shorts URL to regular YouTube URL for better compatibility
   String _convertToRegularYouTubeUrl(String url) {
+    debugPrint('Converting URL: $url');
+    
     if (url.contains('/shorts/')) {
       // Extract video ID from shorts URL
       final RegExp regExp = RegExp(r'/shorts/([a-zA-Z0-9_-]{11})');
       final match = regExp.firstMatch(url);
       if (match != null) {
         final videoId = match.group(1);
-        return 'https://www.youtube.com/watch?v=$videoId';
+        final convertedUrl = 'https://www.youtube.com/watch?v=$videoId';
+        debugPrint('Converted shorts URL to: $convertedUrl');
+        return convertedUrl;
+      }
+    } else if (url.contains('youtu.be/')) {
+      // Handle youtu.be short URLs
+      final RegExp regExp = RegExp(r'youtu\.be/([a-zA-Z0-9_-]{11})');
+      final match = regExp.firstMatch(url);
+      if (match != null) {
+        final videoId = match.group(1);
+        final convertedUrl = 'https://www.youtube.com/watch?v=$videoId';
+        debugPrint('Converted youtu.be URL to: $convertedUrl');
+        return convertedUrl;
       }
     }
-    return url; // Return original URL if not a shorts URL
+    
+    debugPrint('No conversion needed, returning original URL');
+    return url; // Return original URL if not a shorts or youtu.be URL
   }
 
   Widget _buildQuickActionCard(BuildContext context, String title, IconData icon, Color color) {
