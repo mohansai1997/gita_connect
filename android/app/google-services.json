@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "631866624337",
+    "project_id": "gita-connect",
+    "storage_bucket": "gita-connect.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:631866624337:android:26ed7300d264fed556ab70",
+        "android_client_info": {
+          "package_name": "com.gitaconnectin.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBD4F0XIju3WEwhCYOnMnMoY7E_BZ5R-Z4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
