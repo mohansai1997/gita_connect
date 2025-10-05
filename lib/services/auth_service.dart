@@ -43,11 +43,16 @@ class AuthService {
     }
 
     try {
-      // Configure Firebase settings to prefer app verification over reCAPTCHA
-      await FirebaseAuth.instance.setSettings(
-        appVerificationDisabledForTesting: false,
-        forceRecaptchaFlow: false,
-      );
+      // Additional attempt to disable reCAPTCHA before each phone verification
+      try {
+        await _auth.setSettings(
+          appVerificationDisabledForTesting: false,
+          forceRecaptchaFlow: false,
+        );
+        debugPrint('Firebase Auth settings configured to avoid reCAPTCHA');
+      } catch (e) {
+        debugPrint('Warning: Could not set Firebase Auth settings: $e');
+      }
       
       await _auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
@@ -57,10 +62,14 @@ class AuthService {
         codeAutoRetrievalTimeout: (String verificationId) {
           debugPrint('Auto retrieval timeout for verification ID: $verificationId');
         },
-        timeout: const Duration(seconds: 60),
+        timeout: const Duration(seconds: 120), // Increased timeout
       );
     } catch (e) {
       debugPrint('Error in phone verification: $e');
+      // If verification fails due to reCAPTCHA, try alternative approach
+      if (e.toString().contains('captcha') || e.toString().contains('verification')) {
+        debugPrint('reCAPTCHA detected, you may need to add SHA-256 fingerprint to Firebase Console');
+      }
       rethrow;
     }
   }
