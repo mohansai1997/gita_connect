@@ -46,7 +46,9 @@ class AuthWrapper extends StatefulWidget {
 class _AuthWrapperState extends State<AuthWrapper> {
   final FirestoreUserService _profileService = FirestoreUserService();
   final AuthService _authService = AuthService();
-  
+  String? _lastCheckedUid;
+  final Map<String, Future<bool>> _profileCheckCache = {};
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -63,121 +65,104 @@ class _AuthWrapperState extends State<AuthWrapper> {
         
         // If user is not authenticated, show login
         if (!snapshot.hasData || snapshot.data == null) {
+          // Clear cached profile data when user logs out
+          _lastCheckedUid = null;
+          _profileCheckCache.clear();
           return const LoginPage();
         }
         
         final currentUser = snapshot.data!;
         
-        // User is authenticated, show ProfileChecker that will handle the logic
-        return ProfileChecker(
-          user: currentUser,
-          profileService: _profileService,
+        // Force fresh profile check if this is a different user or first check
+        final shouldRefreshProfile = _lastCheckedUid != currentUser.uid;
+        
+        // User is authenticated, check profile completion
+        return FutureBuilder<bool>(
+          key: ValueKey('profile_check_${currentUser.uid}_${shouldRefreshProfile ? DateTime.now().millisecondsSinceEpoch : 'cached'}'),
+          future: _getCachedProfileCheck(currentUser, forceRefresh: shouldRefreshProfile),
+          builder: (context, profileSnapshot) {
+            // Show loading while checking profile
+            if (profileSnapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+            
+            // Update cached values
+            _lastCheckedUid = currentUser.uid;
+            
+            // If profile is complete, show home page
+            if (profileSnapshot.hasData && profileSnapshot.data == true) {
+              return const GitaConnectHomePage(title: 'Gita Connect');
+            } else {
+              // Profile is not complete, show profile completion page
+              return const ProfileCompletionPage();
+            }
+          },
         );
-      },
-    );
   }
 
-}
-
-// Widget that directly manages profile checking without any caching
-class ProfileChecker extends StatefulWidget {
-  final User user;
-  final FirestoreUserService profileService;
-  
-  const ProfileChecker({
-    super.key,
-    required this.user,
-    required this.profileService,
-  });
-  
-  @override
-  State<ProfileChecker> createState() => _ProfileCheckerState();
-}
-
-class _ProfileCheckerState extends State<ProfileChecker> {
-  bool? _isProfileComplete;
-  bool _isLoading = true;
-  
-  @override
-  void initState() {
-    super.initState();
-    _checkProfileStatus();
+  Future<bool> _getCachedProfileCheck(User user, {bool forceRefresh = false}) async {
+    final cacheKey = user.uid;
+    
+    // If force refresh or no cache, create new future
+    if (forceRefresh || !_profileCheckCache.containsKey(cacheKey)) {
+      debugPrint('Creating new profile check for UID: ${user.uid}');
+      _profileCheckCache[cacheKey] = _checkAndCreateProfile(user, forceRefresh: forceRefresh);
+    } else {
+      debugPrint('Using cached profile check for UID: ${user.uid}');
+    }
+    
+    return await _profileCheckCache[cacheKey]!;
   }
-  
-  Future<void> _checkProfileStatus() async {
+
+  Future<bool> _checkAndCreateProfile(User user, {bool forceRefresh = false}) async {
     try {
-      debugPrint('=== Simplified Profile Check Started ===');
-      debugPrint('User UID: ${widget.user.uid}');
-      debugPrint('Phone: ${widget.user.phoneNumber}');
+      debugPrint('=== Profile Check Started ===');
+      debugPrint('User UID: ${user.uid}');
+      debugPrint('Phone: ${user.phoneNumber}');
+      debugPrint('Force refresh: $forceRefresh');
       
-      // Simply check if profile exists in Firestore
-      debugPrint('Checking if profile exists in Firestore...');
-      final existingProfile = await widget.profileService.getUserProfile(widget.user.uid);
+      // Check if profile exists and is complete
+      final existingProfile = await _profileService.getUserProfile(user.uid);
       
       if (existingProfile == null) {
-        // No profile exists - show profile completion page
-        // We'll create the profile only when user completes it
-        debugPrint('No profile found in database');
-        debugPrint('=== New User - Show Profile Completion (no DB save yet) ===');
+        debugPrint('No existing profile found - creating initial profile');
+        // Create initial profile for new user
+        final success = await _profileService.createInitialProfile(
+          uid: user.uid,
+          phoneNumber: user.phoneNumber ?? '',
+        );
         
-        if (mounted) {
-          setState(() {
-            _isProfileComplete = false;
-            _isLoading = false;
-          });
-        }
-        return;
+        debugPrint('Initial profile creation success: $success');
+        debugPrint('=== New User - Redirecting to Profile Completion ===');
+        return false; // Profile needs to be completed
       }
       
-      // Profile exists - check if it's complete
-      debugPrint('Profile exists in database:');
+      debugPrint('Existing profile found:');
       debugPrint('- Name: ${existingProfile.name}');
       debugPrint('- Email: ${existingProfile.email}');
       debugPrint('- Is Complete: ${existingProfile.isProfileComplete}');
       
-      final isComplete = existingProfile.isProfileComplete;
-      debugPrint(isComplete 
-        ? '=== Existing User with Complete Profile - Show Home ===' 
-        : '=== Existing User with Incomplete Profile - Show Profile Completion ===');
-      
-      if (mounted) {
-        setState(() {
-          _isProfileComplete = isComplete;
-          _isLoading = false;
-        });
+      // Check if existing user's profile is complete
+      if (existingProfile.isProfileComplete) {
+        debugPrint('=== Existing User with Complete Profile - Redirecting to Home ===');
+        return true;
+      } else {
+        debugPrint('=== Existing User with Incomplete Profile - Redirecting to Profile Completion ===');
+        return false;
       }
-      
     } catch (e) {
       debugPrint('Error checking profile: $e');
-      debugPrint('=== Error Occurred - Show Profile Completion ===');
-      
-      if (mounted) {
-        setState(() {
-          _isProfileComplete = false;
-          _isLoading = false;
-        });
-      }
-    }
-  }
-  
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-    
-    // Show appropriate screen based on fresh profile status
-    if (_isProfileComplete == true) {
-      return const GitaConnectHomePage(title: 'Gita Connect');
-    } else {
-      return const ProfileCompletionPage();
+      debugPrint('=== Error Occurred - Redirecting to Profile Completion ===');
+      return false; // Assume profile needs completion if error occurs
     }
   }
 }
+
+// Remove duplicate class extension and close AuthWrapper properly
 
 class GitaConnectHomePage extends StatelessWidget {
   const GitaConnectHomePage({super.key, required this.title});
@@ -839,4 +824,7 @@ class _HomeContentState extends State<HomeContent> {
     debugPrint('No conversion needed, returning original URL');
     return url; // Return original URL if not a shorts or youtu.be URL
   }
+
+
 }
+

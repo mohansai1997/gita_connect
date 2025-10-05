@@ -43,6 +43,12 @@ class AuthService {
     }
 
     try {
+      // Configure Firebase settings to prefer app verification over reCAPTCHA
+      await FirebaseAuth.instance.setSettings(
+        appVerificationDisabledForTesting: false,
+        forceRecaptchaFlow: false,
+      );
+      
       await _auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
         verificationCompleted: verificationCompleted,
@@ -114,7 +120,12 @@ class AuthService {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
+      
+      // Clear test mode authentication
+      clearTestMode();
+      
       debugPrint('User signed out successfully');
+      // Note: Firestore profile data persists across sign-ins
     } catch (e) {
       debugPrint('Error signing out: $e');
       rethrow;

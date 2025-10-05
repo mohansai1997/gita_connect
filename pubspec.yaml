@@ -36,9 +36,13 @@ dependencies:
   cupertino_icons: ^1.0.8
   url_launcher: ^6.2.2
   
-  # Firebase packages for authentication
+  # Firebase packages for authentication and database
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.5
+  
+  # Local storage (keeping for potential offline caching)
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
