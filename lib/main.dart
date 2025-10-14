@@ -199,7 +199,28 @@ class GitaConnectHomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(title),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'Where Every Step Leads You Closer to the Divine',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w300,
+                color: Colors.grey.shade700,
+                height: 0.9,
+              ),
+            ),
+          ],
+        ),
         automaticallyImplyLeading: false, // Remove default hamburger
         actions: [
           IconButton(
