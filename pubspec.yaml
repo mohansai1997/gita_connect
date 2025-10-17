@@ -41,9 +41,15 @@ dependencies:
   firebase_auth: ^5.3.1
   cloud_firestore: ^5.4.5
   firebase_storage: ^12.3.4
+  firebase_messaging: ^15.2.10
   
   # Local storage (keeping for potential offline caching)
   shared_preferences: ^2.2.2
+  
+  # Local notifications (keeping for immediate notifications)
+  flutter_local_notifications: ^17.2.3
+  timezone: ^0.9.4
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

@@ -9,6 +9,8 @@ import 'screens/profile_completion_page.dart';
 import 'screens/full_gallery_page.dart';
 import 'services/auth_service.dart';
 import 'services/firestore_user_service.dart';
+import 'services/notification_service.dart';
+import 'services/fcm_service.dart';
 import 'services/gallery_service.dart';
 
 void main() async {
@@ -20,6 +22,10 @@ void main() async {
     appVerificationDisabledForTesting: false,
     forceRecaptchaFlow: false,
   );
+  
+  // Initialize notification services
+  await NotificationService.initialize();
+  await FCMService.initialize();
   
   runApp(const GitaConnectApp());
 }
@@ -189,10 +195,43 @@ class _ProfileCheckerState extends State<ProfileChecker> {
   }
 }
 
-class GitaConnectHomePage extends StatelessWidget {
+class GitaConnectHomePage extends StatefulWidget {
   const GitaConnectHomePage({super.key, required this.title});
 
   final String title;
+
+  @override
+  State<GitaConnectHomePage> createState() => _GitaConnectHomePageState();
+}
+
+class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
+  @override
+  void initState() {
+    super.initState();
+    _setupNotifications();
+  }
+
+  /// Setup notifications for authenticated user
+  Future<void> _setupNotifications() async {
+    try {
+      // Initialize FCM for reliable server-side notifications
+      await FCMService.initialize();
+      
+      // Subscribe to daily Krishna reminders topic
+      await FCMService.subscribeToKrishnaReminders();
+      
+      debugPrint('✅ FCM notifications set up successfully');
+      
+      // Also set up local notifications as backup
+      final hasPermission = await NotificationService.requestPermissions();
+      if (hasPermission) {
+        await NotificationService.scheduleDailyKrishnaReminder();
+        debugPrint('✅ Local backup notifications also set up');
+      }
+    } catch (e) {
+      debugPrint('❌ Error setting up notifications: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -204,7 +243,7 @@ class GitaConnectHomePage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              title,
+              widget.title,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -319,12 +358,102 @@ class GitaConnectHomePage extends StatelessWidget {
                 ),
                 const Divider(),
                 ListTile(
+                  leading: const Icon(Icons.notifications_active, color: Colors.deepOrange),
+                  title: const Text('Test Notification'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    try {
+                      await NotificationService.showTestNotification();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('✅ Test notification sent! Check your notification panel.'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('❌ Error: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.cloud, color: Colors.deepOrange),
+                  title: const Text('Test FCM'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    try {
+                      await FCMService.sendTestNotification();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('✅ FCM test sent! This proves server notifications work.'),
+                          backgroundColor: Colors.blue,
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('❌ FCM Error: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.schedule, color: Colors.deepOrange),
+                  title: const Text('Test Scheduled (2min)'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    try {
+                      await NotificationService.scheduleTestNotificationIn2Minutes();
+                      await NotificationService.checkScheduledNotifications();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('⏰ Scheduled test notification for 2 minutes from now!'),
+                          backgroundColor: Colors.blue,
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('❌ Error: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.settings, color: Colors.deepOrange),
                   title: const Text('Settings'),
                   onTap: () {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Settings page coming soon!')),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.battery_saver, color: Colors.deepOrange),
+                  title: const Text('Notification Setup'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('📱 Notification Setup'),
+                        content: Text(NotificationService.getBatteryOptimizationGuidance()),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Got it!'),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),
