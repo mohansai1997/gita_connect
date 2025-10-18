@@ -220,14 +220,7 @@ class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
       // Subscribe to daily Krishna reminders topic
       await FCMService.subscribeToKrishnaReminders();
       
-      debugPrint('✅ FCM notifications set up successfully');
-      
-      // Also set up local notifications as backup
-      final hasPermission = await NotificationService.requestPermissions();
-      if (hasPermission) {
-        await NotificationService.scheduleDailyKrishnaReminder();
-        debugPrint('✅ Local backup notifications also set up');
-      }
+      debugPrint('✅ FCM notifications set up successfully (server-side scheduling)');
     } catch (e) {
       debugPrint('❌ Error setting up notifications: $e');
     }
@@ -403,30 +396,7 @@ class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
                     }
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.schedule, color: Colors.deepOrange),
-                  title: const Text('Test Scheduled (2min)'),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    try {
-                      await NotificationService.scheduleTestNotificationIn2Minutes();
-                      await NotificationService.checkScheduledNotifications();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('⏰ Scheduled test notification for 2 minutes from now!'),
-                          backgroundColor: Colors.blue,
-                        ),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('❌ Error: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                ),
+
                 ListTile(
                   leading: const Icon(Icons.settings, color: Colors.deepOrange),
                   title: const Text('Settings'),
@@ -437,26 +407,7 @@ class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
                     );
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.battery_saver, color: Colors.deepOrange),
-                  title: const Text('Notification Setup'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('📱 Notification Setup'),
-                        content: Text(NotificationService.getBatteryOptimizationGuidance()),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Got it!'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+
                 ListTile(
                   leading: const Icon(Icons.help_outline, color: Colors.deepOrange),
                   title: const Text('Help & Support'),
