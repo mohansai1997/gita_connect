@@ -4,9 +4,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'models/youtube_short.dart';
+import 'models/user_type.dart';
 import 'screens/login_page.dart';
 import 'screens/profile_completion_page.dart';
+import 'screens/profile_screen.dart';
 import 'screens/full_gallery_page.dart';
+import 'screens/admin/admin_dashboard_screen.dart';
+import 'screens/admin/gallery_management_screen.dart';
 import 'services/auth_service.dart';
 import 'services/firestore_user_service.dart';
 import 'services/notification_service.dart';
@@ -298,29 +302,64 @@ class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Text(
-                        'Welcome, Devotee!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome, Devotee!',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '⭐ VIP Member',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       );
                     }
                     
                     String userName = 'Devotee';
+                    String userTypeDisplay = '⭐ VIP Member';
+                    UserType currentUserType = UserType.vip;
+                    
                     if (snapshot.hasData && snapshot.data!.exists) {
                       final userData = snapshot.data!.data() as Map<String, dynamic>?;
                       userName = userData?['name'] ?? 'Devotee';
+                      
+                      // Get user type from database
+                      final userTypeString = userData?['userType'] as String?;
+                      currentUserType = UserType.fromString(userTypeString);
+                      userTypeDisplay = '${currentUserType.icon} ${currentUserType.displayName}';
                     }
                     
-                    return Text(
-                      'Hare Krishna, $userName!',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hare Krishna $userName!',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          userTypeDisplay,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -328,118 +367,25 @@ class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
             ),
           ),
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.person, color: Colors.deepOrange),
-                  title: const Text('Profile'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Profile page coming soon!')),
-                    );
-                  },
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.notifications_active, color: Colors.deepOrange),
-                  title: const Text('Test Notification'),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    try {
-                      await NotificationService.showTestNotification();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('✅ Test notification sent! Check your notification panel.'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('❌ Error: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.cloud, color: Colors.deepOrange),
-                  title: const Text('Test FCM'),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    try {
-                      await FCMService.sendTestNotification();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('✅ FCM test sent! This proves server notifications work.'),
-                          backgroundColor: Colors.blue,
-                        ),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('❌ FCM Error: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.logout, color: Colors.red),
-                  title: const Text('Logout', style: TextStyle(color: Colors.red)),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    // Show confirmation dialog
-                    final shouldLogout = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Logout'),
-                        content: const Text('Are you sure you want to logout?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Logout', style: TextStyle(color: Colors.red)),
-                          ),
-                        ],
-                      ),
-                    );
-                    
-                    if (shouldLogout == true) {
-                      try {
-                        await AuthService().signOut();
-                        // Clear test mode authentication
-                        AuthService().clearTestMode();
-                        if (context.mounted) {
-                          // Navigate to login page
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            '/login',
-                            (route) => false,
-                          );
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error logging out: $e'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      }
-                    }
-                  },
-                ),
-              ],
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(FirebaseAuth.instance.currentUser?.uid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                UserType currentUserType = UserType.vip;
+                
+                if (snapshot.hasData && snapshot.data!.exists) {
+                  final userData = snapshot.data!.data() as Map<String, dynamic>?;
+                  final userTypeString = userData?['userType'] as String?;
+                  currentUserType = UserType.fromString(userTypeString);
+                }
+                
+                return ListView(
+                  padding: EdgeInsets.zero,
+                  children: _buildMenuItems(context, currentUserType),
+                );
+              },
             ),
           ),
           const Divider(),
@@ -457,6 +403,251 @@ class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
         ],
       ),
     );
+  }
+
+  /// Build menu items based on user type
+  List<Widget> _buildMenuItems(BuildContext context, UserType userType) {
+    List<Widget> menuItems = [
+      // Profile
+      ListTile(
+        leading: const Icon(Icons.person, color: Colors.deepOrange),
+        title: const Text('Profile'),
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ProfileScreen(),
+            ),
+          );
+        },
+      ),
+      
+      const Divider(),
+      
+      // Test Notifications
+      ListTile(
+        leading: const Icon(Icons.notifications_active, color: Colors.deepOrange),
+        title: const Text('Test Notification'),
+        onTap: () async {
+          Navigator.pop(context);
+          try {
+            await NotificationService.showTestNotification();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✅ Test notification sent! Check your notification panel.'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('❌ Error: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+      ),
+      
+      // Test FCM
+      ListTile(
+        leading: const Icon(Icons.cloud, color: Colors.deepOrange),
+        title: const Text('Test FCM'),
+        onTap: () async {
+          Navigator.pop(context);
+          try {
+            await FCMService.sendTestNotification();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✅ FCM test sent! This proves server notifications work.'),
+                backgroundColor: Colors.blue,
+              ),
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('❌ FCM Error: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+      ),
+      
+      // Gallery
+      ListTile(
+        leading: const Icon(Icons.photo_library, color: Colors.deepOrange),
+        title: const Text('Gallery'),
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const FullGalleryPage(),
+            ),
+          );
+        },
+      ),
+    ];
+
+    // Admin Section - Only visible to admin users
+    if (userType.isAdmin) {
+      menuItems.addAll([
+        const Divider(thickness: 2),
+        
+        // Admin Section Header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Icon(Icons.admin_panel_settings, color: Colors.red.shade700, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Admin Panel',
+                style: TextStyle(
+                  color: Colors.red.shade700,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        // Admin Dashboard
+        ListTile(
+          leading: Icon(Icons.dashboard, color: Colors.red.shade700),
+          title: const Text('Admin Dashboard'),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AdminDashboardScreen(),
+              ),
+            );
+          },
+        ),
+        
+        // Manage Gallery
+        ListTile(
+          leading: Icon(Icons.photo_library_outlined, color: Colors.red.shade700),
+          title: const Text('Manage Gallery'),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const GalleryManagementScreen(),
+              ),
+            );
+          },
+        ),
+        
+        // Manage Videos
+        ListTile(
+          leading: Icon(Icons.video_library_outlined, color: Colors.red.shade700),
+          title: const Text('Manage Videos'),
+          onTap: () {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Video Management coming soon!'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          },
+        ),
+        
+        // Manage Notifications
+        ListTile(
+          leading: Icon(Icons.notifications_outlined, color: Colors.red.shade700),
+          title: const Text('Manage Notifications'),
+          onTap: () {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Notification Management coming soon!'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          },
+        ),
+        
+        // Manage Users
+        ListTile(
+          leading: Icon(Icons.people_outline, color: Colors.red.shade700),
+          title: const Text('Manage Users'),
+          onTap: () {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('User Management coming soon!'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          },
+        ),
+      ]);
+    }
+
+    // Logout - Always at the bottom
+    menuItems.addAll([
+      const Divider(),
+      ListTile(
+        leading: const Icon(Icons.logout, color: Colors.red),
+        title: const Text('Logout', style: TextStyle(color: Colors.red)),
+        onTap: () async {
+          Navigator.pop(context);
+          // Show confirmation dialog
+          final shouldLogout = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Logout'),
+              content: const Text('Are you sure you want to logout?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Logout', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
+          );
+          
+          if (shouldLogout == true) {
+            try {
+              await AuthService().signOut();
+              // Clear test mode authentication
+              AuthService().clearTestMode();
+              if (context.mounted) {
+                // Navigate to login page
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/login',
+                  (route) => false,
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error logging out: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          }
+        },
+      ),
+    ]);
+
+    return menuItems;
   }
 }
 

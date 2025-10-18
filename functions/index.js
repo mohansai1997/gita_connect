@@ -20,7 +20,7 @@ setGlobalOptions({maxInstances: 10});
  * Runs every day at 10:40 PM IST (22:40)
  */
 exports.sendDailyKrishnaReminders = onSchedule({
-  schedule: "50 23 * * *", // 10:40 PM daily
+  schedule: "50 17 * * *", // 10:40 PM daily
   timeZone: "Asia/Kolkata", // IST timezone
   memory: "256MiB",
   maxInstances: 1,

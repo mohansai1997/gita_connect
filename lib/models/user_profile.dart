@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'user_type.dart';
 
 class UserProfile {
   final String uid;
@@ -6,6 +7,7 @@ class UserProfile {
   final String? name;
   final String? email;
   final bool isProfileComplete;
+  final UserType userType;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -15,6 +17,7 @@ class UserProfile {
     this.name,
     this.email,
     required this.isProfileComplete,
+    this.userType = UserType.vip, // Default to VIP for new users
     required this.createdAt,
     this.updatedAt,
   });
@@ -27,6 +30,7 @@ class UserProfile {
       name: json['name'],
       email: json['email'],
       isProfileComplete: json['isProfileComplete'] ?? false,
+      userType: UserType.fromString(json['userType']),
       createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
@@ -45,6 +49,7 @@ class UserProfile {
       name: data['name'],
       email: data['email'],
       isProfileComplete: data['isProfileComplete'] ?? false,
+      userType: UserType.fromString(data['userType']),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
     );
@@ -58,6 +63,7 @@ class UserProfile {
       'name': name,
       'email': email,
       'isProfileComplete': isProfileComplete,
+      'userType': userType.name,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
@@ -71,6 +77,7 @@ class UserProfile {
       'name': name,
       'email': email,
       'isProfileComplete': isProfileComplete,
+      'userType': userType.name,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
     };
@@ -83,6 +90,7 @@ class UserProfile {
     String? name,
     String? email,
     bool? isProfileComplete,
+    UserType? userType,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -92,6 +100,7 @@ class UserProfile {
       name: name ?? this.name,
       email: email ?? this.email,
       isProfileComplete: isProfileComplete ?? this.isProfileComplete,
+      userType: userType ?? this.userType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -99,6 +108,6 @@ class UserProfile {
 
   @override
   String toString() {
-    return 'UserProfile{uid: $uid, phoneNumber: $phoneNumber, name: $name, email: $email, isProfileComplete: $isProfileComplete}';
+    return 'UserProfile{uid: $uid, phoneNumber: $phoneNumber, name: $name, email: $email, userType: ${userType.displayName}, isProfileComplete: $isProfileComplete}';
   }
 }

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user_profile.dart';
+import '../models/user_type.dart';
 
 class FirestoreUserService {
   static final FirestoreUserService _instance = FirestoreUserService._internal();
@@ -90,6 +91,7 @@ class FirestoreUserService {
         name: name.trim(),
         email: email.trim().toLowerCase(),
         isProfileComplete: true,
+        userType: existingProfile?.userType ?? UserType.vip, // Preserve existing userType or default to VIP
         createdAt: existingProfile?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -128,6 +130,7 @@ class FirestoreUserService {
         name: null,
         email: null,
         isProfileComplete: false,
+        userType: UserType.vip, // Default VIP status for new users
         createdAt: DateTime.now(),
         updatedAt: null,
       );
@@ -242,6 +245,73 @@ class FirestoreUserService {
         debugPrint('Error in batch update: $e');
       }
       return false;
+    }
+  }
+
+  /// Update user type (Admin only function)
+  /// This method allows changing a user's type (Admin, VIP, Premium)
+  Future<bool> updateUserType(String uid, UserType newUserType) async {
+    try {
+      if (kDebugMode) {
+        debugPrint('Updating user type for UID: $uid to ${newUserType.displayName}');
+      }
+
+      // Get existing profile
+      final existingProfile = await getUserProfile(uid);
+      if (existingProfile == null) {
+        if (kDebugMode) {
+          debugPrint('No profile found for UID: $uid');
+        }
+        return false;
+      }
+
+      // Create updated profile with new user type
+      final updatedProfile = existingProfile.copyWith(
+        userType: newUserType,
+        updatedAt: DateTime.now(),
+      );
+
+      final success = await saveUserProfile(updatedProfile);
+      
+      if (success && kDebugMode) {
+        debugPrint('✅ User type updated successfully: ${existingProfile.name} is now ${newUserType.displayName}');
+      }
+      
+      return success;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error updating user type: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Get users by type (Admin function for user management)
+  Future<List<UserProfile>> getUsersByType(UserType userType) async {
+    try {
+      if (kDebugMode) {
+        debugPrint('Fetching users with type: ${userType.displayName}');
+      }
+
+      final querySnapshot = await _firestore
+          .collection(_usersCollection)
+          .where('userType', isEqualTo: userType.name)
+          .get();
+
+      final profiles = querySnapshot.docs
+          .map((doc) => UserProfile.fromFirestore(doc))
+          .toList();
+
+      if (kDebugMode) {
+        debugPrint('Found ${profiles.length} users with type: ${userType.displayName}');
+      }
+
+      return profiles;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error fetching users by type: $e');
+      }
+      return [];
     }
   }
 }

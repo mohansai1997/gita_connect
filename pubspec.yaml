@@ -48,6 +48,10 @@ dependencies:
   
   # Local notifications (keeping for immediate notifications)
   flutter_local_notifications: ^17.2.3
+  
+  # Image picker for gallery management
+  image_picker: ^1.2.0
+  file_picker: ^8.1.2
   timezone: ^0.9.4
   permission_handler: ^11.3.1
 
