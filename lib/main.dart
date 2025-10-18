@@ -255,14 +255,6 @@ class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
         ),
         automaticallyImplyLeading: false, // Remove default hamburger
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notifications coming soon!')),
-              );
-            },
-          ),
           Builder(
             builder: (context) => IconButton(
               icon: const Icon(Icons.menu),
@@ -394,28 +386,6 @@ class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
                         ),
                       );
                     }
-                  },
-                ),
-
-                ListTile(
-                  leading: const Icon(Icons.settings, color: Colors.deepOrange),
-                  title: const Text('Settings'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Settings page coming soon!')),
-                    );
-                  },
-                ),
-
-                ListTile(
-                  leading: const Icon(Icons.help_outline, color: Colors.deepOrange),
-                  title: const Text('Help & Support'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Help page coming soon!')),
-                    );
                   },
                 ),
                 const Divider(),
