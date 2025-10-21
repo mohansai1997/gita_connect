@@ -3,7 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'models/youtube_short.dart';
+
 import 'models/user_type.dart';
 import 'screens/login_page.dart';
 import 'screens/profile_completion_page.dart';
@@ -11,11 +11,14 @@ import 'screens/profile_screen.dart';
 import 'screens/full_gallery_page.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/admin/gallery_management_screen.dart';
+import 'screens/admin/video_management_screen.dart';
 import 'services/auth_service.dart';
 import 'services/firestore_user_service.dart';
 import 'services/notification_service.dart';
 import 'services/fcm_service.dart';
 import 'services/gallery_service.dart';
+import 'services/video_service.dart';
+import 'widgets/dynamic_video_categories.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -551,10 +554,10 @@ class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
           title: const Text('Manage Videos'),
           onTap: () {
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Video Management coming soon!'),
-                backgroundColor: Colors.orange,
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const VideoManagementScreen(),
               ),
             );
           },
@@ -718,97 +721,7 @@ class _HomeContentState extends State<HomeContent> {
             ),
           ),
           const SizedBox(height: 12),
-          SizedBox(
-            height: 140,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: ShortsData.getFeaturedShorts().length,
-              itemBuilder: (context, index) {
-                final short = ShortsData.getFeaturedShorts()[index];
-                return GestureDetector(
-                  onTap: () => _launchVideo(short.url),
-                  child: Container(
-                    width: 200,
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Stack(
-                        children: [
-                          // Thumbnail
-                          Container(
-                            height: 140,
-                            decoration: BoxDecoration(
-                              color: Colors.deepOrange.shade100,
-                              image: DecorationImage(
-                                image: NetworkImage(short.thumbnailUrl),
-                                fit: BoxFit.cover,
-                                onError: (exception, stackTrace) {
-                                  // Fallback if thumbnail fails to load
-                                },
-                              ),
-                            ),
-                          ),
-                          // Play button overlay
-                          Container(
-                            height: 140,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.3),
-                            ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.play_circle_filled,
-                                color: Colors.white,
-                                size: 50,
-                              ),
-                            ),
-                          ),
-                          // Title overlay
-                          Positioned(
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.transparent,
-                                    Colors.black.withOpacity(0.8),
-                                  ],
-                                ),
-                              ),
-                              child: Text(
-                                short.title,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+          const BhaktiBitesWidget(),
           
           const SizedBox(height: 24),
           
@@ -827,100 +740,8 @@ class _HomeContentState extends State<HomeContent> {
           
           const SizedBox(height: 24),
           
-          // Lecture Videos Section
-          Text(
-            'Lecture Videos',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.deepOrange.shade800,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...List.generate(3, (index) {
-            final lectureUrls = [
-              'https://www.youtube.com/watch?v=T9ImysdFAZw',
-              'https://www.youtube.com/watch?v=FIQqKyFJ_xw',
-              'https://www.youtube.com/watch?v=jn9TrsgdKU4',
-            ];
-            final lectureTitles = [
-              'Bhagavad Gita Chapter 1 - Arjuna Vishada Yoga',
-              'Krishna Consciousness in Daily Life',
-              'Understanding the Soul - Bhagavad Gita Wisdom',
-            ];
-            final lectureDurations = ['45:30', '32:15', '28:45'];
-            
-            return GestureDetector(
-              onTap: () => _launchVideo(lectureUrls[index]),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.deepOrange.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.deepOrange.shade200),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 2,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.deepOrange.shade200,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.play_arrow,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            lectureTitles[index],
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.access_time,
-                                size: 16,
-                                color: Colors.grey.shade600,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                lectureDurations[index],
-                                style: TextStyle(color: Colors.grey.shade600),
-                              ),
-                              const Spacer(),
-                              Icon(
-                                Icons.play_circle_outline,
-                                color: Colors.deepOrange.shade600,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
+          // Dynamic Video Categories Section (all categories except Bhakti Bites)
+          const DynamicVideoCategoriesWidget(),
           
           const SizedBox(height: 24),
           
@@ -964,113 +785,7 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
-  // Helper method to launch videos
-  Future<void> _launchVideo(String url) async {
-    try {
-      // For shorts URLs, always convert to regular YouTube URL first for consistent behavior
-      String finalUrl = _convertToRegularYouTubeUrl(url);
-      final Uri videoUri = Uri.parse(finalUrl);
-      
-      debugPrint('Launching video: $finalUrl');
-      
-      // Try to launch with external application (YouTube app) first
-      // This avoids the in-app browser navigation issues
-      bool launched = false;
-      
-      try {
-        await launchUrl(
-          videoUri,
-          mode: LaunchMode.externalApplication,
-        );
-        launched = true;
-        debugPrint('Successfully launched with external application');
-      } catch (e) {
-        debugPrint('External app launch failed: $e');
-      }
-      
-      if (!launched) {
-        // Fallback: try with platform default
-        try {
-          await launchUrl(
-            videoUri,
-            mode: LaunchMode.platformDefault,
-          );
-          launched = true;
-          debugPrint('Successfully launched with platform default');
-        } catch (e) {
-          debugPrint('Platform default launch failed: $e');
-        }
-      }
-      
-      if (!launched) {
-        // Final fallback: try original URL if we converted it
-        if (finalUrl != url) {
-          try {
-            final Uri originalUri = Uri.parse(url);
-            await launchUrl(
-              originalUri,
-              mode: LaunchMode.externalApplication,
-            );
-            launched = true;
-            debugPrint('Successfully launched with original URL');
-          } catch (e) {
-            debugPrint('Original URL launch failed: $e');
-          }
-        }
-      }
-      
-      if (!launched) {
-        throw Exception('All launch methods failed');
-      }
-      
-    } catch (e) {
-      debugPrint('Could not launch video: $url');
-      debugPrint('Error: $e');
-      
-      // Show user-friendly message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Unable to open video. Please check if YouTube is installed.'),
-            action: SnackBarAction(
-              label: 'OK',
-              onPressed: () {},
-            ),
-          ),
-        );
-      }
-    }
-  }
 
-  // Convert shorts URL to regular YouTube URL for better compatibility
-  String _convertToRegularYouTubeUrl(String url) {
-    debugPrint('Converting URL: $url');
-    
-    if (url.contains('/shorts/')) {
-      // Extract video ID from shorts URL
-      final RegExp regExp = RegExp(r'/shorts/([a-zA-Z0-9_-]{11})');
-      final match = regExp.firstMatch(url);
-      if (match != null) {
-        final videoId = match.group(1);
-        final convertedUrl = 'https://www.youtube.com/watch?v=$videoId';
-        debugPrint('Converted shorts URL to: $convertedUrl');
-        return convertedUrl;
-      }
-    } else if (url.contains('youtu.be/')) {
-      // Handle youtu.be short URLs
-      final RegExp regExp = RegExp(r'youtu\.be/([a-zA-Z0-9_-]{11})');
-      final match = regExp.firstMatch(url);
-      if (match != null) {
-        final videoId = match.group(1);
-        final convertedUrl = 'https://www.youtube.com/watch?v=$videoId';
-        debugPrint('Converted youtu.be URL to: $convertedUrl');
-        return convertedUrl;
-      }
-    }
-    
-    debugPrint('No conversion needed, returning original URL');
-    return url; // Return original URL if not a shorts or youtu.be URL
-  }
 }
 
 // Gallery Widget to display photos from Firebase Storage
@@ -1337,5 +1052,491 @@ class _GalleryWidgetState extends State<GalleryWidget> {
         ],
       ],
     );
+  }
+}
+
+// Widget for displaying dynamic Bhakti Bites from Firestore
+class BhaktiBitesWidget extends StatefulWidget {
+  const BhaktiBitesWidget({super.key});
+
+  @override
+  State<BhaktiBitesWidget> createState() => _BhaktiBitesWidgetState();
+}
+
+class _BhaktiBitesWidgetState extends State<BhaktiBitesWidget> {
+  List<Map<String, dynamic>> _bhaktiBites = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _debugDatabase();
+    _loadBhaktiBites();
+  }
+
+  Future<void> _debugDatabase() async {
+    await VideoService.debugAllVideos();
+  }
+
+  Future<void> _loadBhaktiBites() async {
+    try {
+      print('DEBUG: Starting to load Bhakti Bites...');
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
+      final videos = await VideoService.getBhaktiBites();
+      
+      print('DEBUG: Loaded ${videos.length} Bhakti Bites videos');
+      
+      if (mounted) {
+        setState(() {
+          _bhaktiBites = videos;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('ERROR: Failed to load Bhakti Bites: $e');
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to load Bhakti Bites: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Container(
+        height: 140,
+        child: const Center(
+          child: CircularProgressIndicator(color: Colors.deepOrange),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Container(
+        height: 140,
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.red.shade200),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, color: Colors.red.shade400, size: 32),
+              const SizedBox(height: 8),
+              Text('Error loading videos', style: TextStyle(color: Colors.red.shade600)),
+              TextButton(onPressed: _loadBhaktiBites, child: const Text('Retry')),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_bhaktiBites.isEmpty) {
+      return Container(
+        height: 140,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.video_library_outlined, size: 40, color: Colors.grey.shade500),
+              const SizedBox(height: 8),
+              Text('No Bhakti Bites found', style: TextStyle(color: Colors.grey.shade600)),
+              Text('Ask admin to add some videos', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 140,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _bhaktiBites.length,
+        itemBuilder: (context, index) {
+          final video = _bhaktiBites[index];
+          final title = video['title'] ?? 'Untitled';
+          final thumbnailUrl = video['thumbnailUrl'] ?? '';
+          final url = video['url'] ?? '';
+
+          return GestureDetector(
+            onTap: () => _launchVideo(url),
+            child: Container(
+              width: 200,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Stack(
+                  children: [
+                    // Thumbnail
+                    Container(
+                      height: 140,
+                      decoration: BoxDecoration(
+                        color: Colors.deepOrange.shade100,
+                        image: thumbnailUrl.isNotEmpty
+                            ? DecorationImage(
+                                image: NetworkImage(thumbnailUrl),
+                                fit: BoxFit.cover,
+                                onError: (exception, stackTrace) {
+                                  // Fallback handled by container color
+                                },
+                              )
+                            : null,
+                      ),
+                      child: thumbnailUrl.isEmpty
+                          ? Icon(
+                              Icons.video_library,
+                              color: Colors.deepOrange.shade400,
+                              size: 48,
+                            )
+                          : null,
+                    ),
+                    // Play button overlay
+                    Container(
+                      height: 140,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.3),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.play_circle_filled,
+                          color: Colors.white,
+                          size: 50,
+                        ),
+                      ),
+                    ),
+                    // Title overlay
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.8),
+                            ],
+                          ),
+                        ),
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _launchVideo(String url) async {
+    try {
+      String finalUrl = VideoService.convertToStandardUrl(url);
+      final Uri videoUri = Uri.parse(finalUrl);
+      
+      await launchUrl(
+        videoUri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to open video. Please check if YouTube is installed.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+}
+
+// Widget for displaying dynamic Lecture Videos from Firestore
+class LectureVideosWidget extends StatefulWidget {
+  const LectureVideosWidget({super.key});
+
+  @override
+  State<LectureVideosWidget> createState() => _LectureVideosWidgetState();
+}
+
+class _LectureVideosWidgetState extends State<LectureVideosWidget> {
+  List<Map<String, dynamic>> _lectureVideos = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _debugDatabase();
+    _loadLectureVideos();
+  }
+
+  Future<void> _debugDatabase() async {
+    await VideoService.debugAllVideos();
+  }
+
+  Future<void> _loadLectureVideos() async {
+    try {
+      print('DEBUG: Starting to load Lecture Videos...');
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
+      final videos = await VideoService.getLectureVideos();
+      
+      print('DEBUG: Loaded ${videos.length} Lecture Videos');
+      
+      if (mounted) {
+        setState(() {
+          _lectureVideos = videos.take(3).toList(); // Show only first 3
+          _isLoading = false;
+        });
+        print('DEBUG: Set ${_lectureVideos.length} lecture videos in state');
+      }
+    } catch (e) {
+      print('ERROR: Failed to load Lecture Videos: $e');
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to load lecture videos: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Container(
+        height: 100,
+        child: const Center(
+          child: CircularProgressIndicator(color: Colors.deepOrange),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.red.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red.shade400, size: 32),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Error loading videos', style: TextStyle(color: Colors.red.shade600, fontWeight: FontWeight.bold)),
+                  Text('Please check your connection', style: TextStyle(color: Colors.red.shade500, fontSize: 12)),
+                ],
+              ),
+            ),
+            TextButton(onPressed: _loadLectureVideos, child: const Text('Retry')),
+          ],
+        ),
+      );
+    }
+
+    if (_lectureVideos.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.video_library_outlined, size: 40, color: Colors.grey.shade500),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('No lecture videos found', style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
+                  Text('Ask admin to add some lecture videos', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        ..._lectureVideos.map((video) {
+          final title = video['title'] ?? 'Untitled Video';
+          final description = video['description'] ?? '';
+          final duration = video['duration'] ?? '';
+          final thumbnailUrl = video['thumbnailUrl'] ?? '';
+          final url = video['url'] ?? '';
+
+          return GestureDetector(
+            onTap: () => _launchVideo(url),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.deepOrange.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.deepOrange.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 80,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.deepOrange.shade200,
+                      borderRadius: BorderRadius.circular(8),
+                      image: thumbnailUrl.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(thumbnailUrl),
+                              fit: BoxFit.cover,
+                              onError: (exception, stackTrace) {
+                                // Fallback handled by container color
+                              },
+                            )
+                          : null,
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (description.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            description,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            if (duration.isNotEmpty) ...[
+                              Icon(
+                                Icons.access_time,
+                                size: 16,
+                                color: Colors.grey.shade600,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                duration,
+                                style: TextStyle(color: Colors.grey.shade600),
+                              ),
+                            ],
+                            const Spacer(),
+                            Icon(
+                              Icons.play_circle_outline,
+                              color: Colors.deepOrange.shade600,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  Future<void> _launchVideo(String url) async {
+    try {
+      String finalUrl = VideoService.convertToStandardUrl(url);
+      final Uri videoUri = Uri.parse(finalUrl);
+      
+      await launchUrl(
+        videoUri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to open video. Please check if YouTube is installed.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
