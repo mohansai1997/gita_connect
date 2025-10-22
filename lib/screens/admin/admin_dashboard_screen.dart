@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/user_type.dart';
+import 'notification_management_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -559,11 +560,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               icon: Icons.notifications,
               color: Colors.orange,
               onTap: () {
-                // TODO: Navigate to Notification Management
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Notification Management coming soon!'),
-                    backgroundColor: Colors.orange,
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationManagementScreen(),
                   ),
                 );
               },

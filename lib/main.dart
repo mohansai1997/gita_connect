@@ -12,10 +12,12 @@ import 'screens/full_gallery_page.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/admin/gallery_management_screen.dart';
 import 'screens/admin/video_management_screen.dart';
+import 'screens/admin/notification_management_screen.dart';
 import 'services/auth_service.dart';
 import 'services/firestore_user_service.dart';
 import 'services/notification_service.dart';
 import 'services/fcm_service.dart';
+import 'services/notification_listener_service.dart';
 import 'services/gallery_service.dart';
 import 'services/video_service.dart';
 import 'widgets/dynamic_video_categories.dart';
@@ -227,7 +229,10 @@ class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
       // Subscribe to daily Krishna reminders topic
       await FCMService.subscribeToKrishnaReminders();
       
-      debugPrint('✅ FCM notifications set up successfully (server-side scheduling)');
+      // Start listening for real-time admin notifications
+      await NotificationListenerService.startListening();
+      
+      debugPrint('✅ FCM notifications and real-time listener set up successfully');
     } catch (e) {
       debugPrint('❌ Error setting up notifications: $e');
     }
@@ -569,10 +574,10 @@ class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
           title: const Text('Manage Notifications'),
           onTap: () {
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Notification Management coming soon!'),
-                backgroundColor: Colors.orange,
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotificationManagementScreen(),
               ),
             );
           },

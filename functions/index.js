@@ -138,6 +138,89 @@ exports.testKrishnaNotification = onRequest({
 });
 
 /**
+ * HTTP function for admin to send custom notifications
+ * This reuses the same FCM infrastructure as daily reminders
+ */
+exports.sendAdminNotification = onRequest({
+  cors: true,
+  memory: "256MiB",
+}, async (req, res) => {
+  logger.info("📤 Admin notification request received");
+
+  try {
+    // Extract notification data from request
+    const {title, body, targetAudience = "all"} = req.body;
+
+    if (!title || !body) {
+      return res.status(400).json({
+        success: false,
+        error: "Title and body are required",
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Create the same message structure as daily reminders
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+      },
+      data: {
+        type: "admin_notification",
+        timestamp: new Date().toISOString(),
+        targetAudience: targetAudience,
+      },
+      topic: "daily_krishna_reminders", // Same topic as daily reminders
+      android: {
+        priority: "high",
+        notification: {
+          channelId: "krishna_reminders",
+          sound: "default",
+          priority: "high",
+        },
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: "default",
+            contentAvailable: true,
+          },
+        },
+      },
+    };
+
+    // Send notification using the same FCM setup
+    const response = await getMessaging().send(message);
+
+    logger.info("✅ Admin notification sent successfully", {
+      messageId: response,
+      title: title,
+      targetAudience: targetAudience,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Admin notification sent successfully",
+      messageId: response,
+      title: title,
+      targetAudience: targetAudience,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error("❌ Error sending admin notification", {
+      error: error.message,
+      stack: error.stack,
+    });
+
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+/**
  * HTTP function to get notification stats (for monitoring)
  */
 exports.getNotificationStats = onRequest({
