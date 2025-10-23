@@ -13,6 +13,7 @@ import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/admin/gallery_management_screen.dart';
 import 'screens/admin/video_management_screen.dart';
 import 'screens/admin/notification_management_screen.dart';
+import 'screens/admin/user_management_screen.dart';
 import 'services/auth_service.dart';
 import 'services/firestore_user_service.dart';
 import 'services/notification_service.dart';
@@ -433,56 +434,6 @@ class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
       
       const Divider(),
       
-      // Test Notifications
-      ListTile(
-        leading: const Icon(Icons.notifications_active, color: Colors.deepOrange),
-        title: const Text('Test Notification'),
-        onTap: () async {
-          Navigator.pop(context);
-          try {
-            await NotificationService.showTestNotification();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('✅ Test notification sent! Check your notification panel.'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('❌ Error: $e'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
-      ),
-      
-      // Test FCM
-      ListTile(
-        leading: const Icon(Icons.cloud, color: Colors.deepOrange),
-        title: const Text('Test FCM'),
-        onTap: () async {
-          Navigator.pop(context);
-          try {
-            await FCMService.sendTestNotification();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('✅ FCM test sent! This proves server notifications work.'),
-                backgroundColor: Colors.blue,
-              ),
-            );
-          } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('❌ FCM Error: $e'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
-      ),
-      
       // Gallery
       ListTile(
         leading: const Icon(Icons.photo_library, color: Colors.deepOrange),
@@ -589,10 +540,10 @@ class _GitaConnectHomePageState extends State<GitaConnectHomePage> {
           title: const Text('Manage Users'),
           onTap: () {
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('User Management coming soon!'),
-                backgroundColor: Colors.orange,
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const UserManagementScreen(),
               ),
             );
           },

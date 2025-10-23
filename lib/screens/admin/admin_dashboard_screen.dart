@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/user_type.dart';
 import 'notification_management_screen.dart';
+import 'user_management_screen.dart';
+import 'gallery_management_screen.dart';
+import 'video_management_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -518,11 +521,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               icon: Icons.people,
               color: Colors.blue,
               onTap: () {
-                // TODO: Navigate to User Management
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('User Management coming soon!'),
-                    backgroundColor: Colors.orange,
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const UserManagementScreen(),
                   ),
                 );
               },
@@ -532,11 +534,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               icon: Icons.photo_library,
               color: Colors.purple,
               onTap: () {
-                // TODO: Navigate to Gallery Management
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Gallery Management coming soon!'),
-                    backgroundColor: Colors.orange,
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const GalleryManagementScreen(),
                   ),
                 );
               },
@@ -546,11 +547,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               icon: Icons.video_library,
               color: Colors.indigo,
               onTap: () {
-                // TODO: Navigate to Video Management
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Video Management coming soon!'),
-                    backgroundColor: Colors.orange,
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const VideoManagementScreen(),
                   ),
                 );
               },
