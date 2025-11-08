@@ -1,0 +1,40 @@
+rules_version = '2';
+
+// Firebase Storage Rules
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Gallery folder rules
+    match /gallery/{allPaths=**} {
+      // Allow all authenticated users to read gallery images
+      allow read: if request.auth != null;
+      
+      // Only admin users can write/upload/delete gallery images
+      allow write: if request.auth != null && 
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.userType == 'Admin';
+    }
+    
+    // Profile pictures folder (if you have one)
+    match /profile_pictures/{allPaths=**} {
+      // Allow authenticated users to read profile pictures
+      allow read: if request.auth != null;
+      
+      // Allow users to upload their own profile pictures
+      allow write: if request.auth != null;
+    }
+    
+    // Videos folder (if you store video files)
+    match /videos/{allPaths=**} {
+      // Allow all authenticated users to read video files
+      allow read: if request.auth != null;
+      
+      // Only admin users can upload video files
+      allow write: if request.auth != null && 
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.userType == 'Admin';
+    }
+    
+    // Default rule: deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
