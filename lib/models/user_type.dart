@@ -28,6 +28,7 @@ enum UserType {
   }
 
   /// Convert UserType to string for database storage
+  @override
   String toString() => name;
 
   /// Check if user has admin privileges

@@ -179,7 +179,7 @@ class AdminNotificationService {
         'totalSent': totalSent,
         'thisWeekCount': thisWeekCount,
         'successfulNotifications': successfulNotifications,
-        'successRate': snapshot.docs.length > 0 ? (successfulNotifications / snapshot.docs.length * 100).round() : 0,
+        'successRate': snapshot.docs.isNotEmpty ? (successfulNotifications / snapshot.docs.length * 100).round() : 0,
         'adminOnlyCount': adminOnlyNotifications,
       };
       

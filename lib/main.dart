@@ -1067,7 +1067,7 @@ class _BhaktiBitesWidgetState extends State<BhaktiBitesWidget> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Container(
+      return SizedBox(
         height: 140,
         child: const Center(
           child: CircularProgressIndicator(color: Colors.deepOrange),
@@ -1304,7 +1304,7 @@ class _LectureVideosWidgetState extends State<LectureVideosWidget> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Container(
+      return SizedBox(
         height: 100,
         child: const Center(
           child: CircularProgressIndicator(color: Colors.deepOrange),
@@ -1470,7 +1470,7 @@ class _LectureVideosWidgetState extends State<LectureVideosWidget> {
               ),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
